@@ -482,7 +482,7 @@ impl Shard {
                 self.handle_gateway_closed(data.as_ref())
             },
             Err(Error::Tungstenite(why)) => {
-                warn!("[{:?}] Websocket error: {:?}", self.shard_info, why);
+                info!("[{:?}] Websocket error: {:?}", self.shard_info, why);
                 info!("[{:?}] Will attempt to auto-reconnect", self.shard_info);
 
                 Ok(Some(ShardAction::Reconnect(self.reconnection_type())))
