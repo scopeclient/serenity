@@ -1918,6 +1918,32 @@ impl Guild {
         )
     }
 
+    /// Calculate a [`PartialMember`]'s permissions in the guild.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the passed [`UserId`] does not match the [`PartialMember`] id, if user is Some.
+    #[inline]
+    #[must_use]
+    pub fn partial_member_permissions(
+        &self,
+        member_id: UserId,
+        member: &PartialMember,
+    ) -> Permissions {
+        if let Some(user) = &member.user {
+            assert_eq!(user.id, member_id, "User::id does not match provided PartialMember");
+        }
+
+        Self::user_permissions_in_(
+            None,
+            member_id,
+            &member.roles,
+            self.id,
+            &self.roles,
+            self.owner_id,
+        )
+    }
+
     /// Moves a member to a specific voice channel.
     ///
     /// Requires the [Move Members] permission.
