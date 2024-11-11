@@ -1086,6 +1086,22 @@ pub struct MessageActivity {
     pub party_id: Option<String>,
 }
 
+enum_number! {
+    /// Message Reference Type information
+    ///
+    /// [Discord docs](https://discord.com/developers/docs/resources/message#message-reference-types)
+    #[derive(Clone, Copy, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]
+    #[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
+    #[serde(from = "u8", into = "u8")]
+    #[non_exhaustive]
+    pub enum MessageReferenceKind {
+        #[default]
+        Default = 0,
+        Forward = 1,
+        _ => Unknown(u8),
+    }
+}
+
 /// Reference data sent with crossposted messages.
 ///
 /// [Discord docs](https://discord.com/developers/docs/resources/channel#message-reference-object-message-reference-structure).
@@ -1093,6 +1109,9 @@ pub struct MessageActivity {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[non_exhaustive]
 pub struct MessageReference {
+    /// The Type of Message Reference
+    #[serde(rename = "type", default = "MessageReferenceKind::default")]
+    pub kind: MessageReferenceKind,
     /// ID of the originating message.
     pub message_id: Option<MessageId>,
     /// ID of the originating message's channel.
@@ -1104,9 +1123,41 @@ pub struct MessageReference {
     pub fail_if_not_exists: Option<bool>,
 }
 
+impl MessageReference {
+    #[must_use]
+    pub fn new(kind: MessageReferenceKind, channel_id: ChannelId) -> Self {
+        Self {
+            kind,
+            channel_id,
+            message_id: None,
+            guild_id: None,
+            fail_if_not_exists: None,
+        }
+    }
+
+    #[must_use]
+    pub fn message_id(mut self, message_id: MessageId) -> Self {
+        self.message_id = Some(message_id);
+        self
+    }
+
+    #[must_use]
+    pub fn guild_id(mut self, guild_id: GuildId) -> Self {
+        self.guild_id = Some(guild_id);
+        self
+    }
+
+    #[must_use]
+    pub fn fail_if_not_exists(mut self, fail_if_not_exists: bool) -> Self {
+        self.fail_if_not_exists = Some(fail_if_not_exists);
+        self
+    }
+}
+
 impl From<&Message> for MessageReference {
     fn from(m: &Message) -> Self {
         Self {
+            kind: MessageReferenceKind::default(),
             message_id: Some(m.id),
             channel_id: m.channel_id,
             guild_id: m.guild_id,
@@ -1116,8 +1167,10 @@ impl From<&Message> for MessageReference {
 }
 
 impl From<(ChannelId, MessageId)> for MessageReference {
+    // TODO(next): Remove this
     fn from(pair: (ChannelId, MessageId)) -> Self {
         Self {
+            kind: MessageReferenceKind::default(),
             message_id: Some(pair.1),
             channel_id: pair.0,
             guild_id: None,
