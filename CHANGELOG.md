@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 This project mostly adheres to [Semantic Versioning][semver].
 
-## [0.12.3] - 2024-XX-XX
+## [0.12.3] - 2024-11-13
 
 Thanks to the following for their contributions:
 
@@ -50,11 +50,11 @@ Thanks to the following for their contributions:
 - [#3013](https://github.com/serenity-rs/serenity/pull/3013) Interaction responses can now send polls.
 - [#3018](https://github.com/serenity-rs/serenity/pull/3018) User App support has been stablised, usable without `unstable_discord_api`.
 - [#3021](https://github.com/serenity-rs/serenity/pull/3021) Support for Entry Point Commands has been added.
-- [#3030](https://github.com/serenity-rs/serenity/pull/3030) A `Message::author_permissions` helper has been added, alongside `Permissions::dm_permissions`. 
+- [#3030](https://github.com/serenity-rs/serenity/pull/3030) A `Message::author_permissions` helper has been added, alongside `Permissions::dm_permissions`.
 
 ### Deserialisation Fixes
 
-- [#2887](https://github.com/serenity-rs/serenity/pull/2887), [#2893](https://github.com/serenity-rs/serenity/pull/2893) 
+- [#2887](https://github.com/serenity-rs/serenity/pull/2887), [#2893](https://github.com/serenity-rs/serenity/pull/2893)
 Messages with reactions no longer fail to deserialize due to super reaction changes.
 - [#2917](https://github.com/serenity-rs/serenity/pull/2917) Application no longer fails to deserialize with `unstable_discord_api`
 - [#3032](https://github.com/serenity-rs/serenity/pull/3032) Guilds with an @everyone role at position `-1` no longer fail to deserialise.
