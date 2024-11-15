@@ -220,6 +220,7 @@ impl Message {
     ///
     /// This may return `None` if:
     /// - The [`Cache`] does not have the current [`Guild`]
+    /// - The [`Guild`] does not have the current channel cached (should never happen).
     /// - This message is not from [`MessageCreateEvent`] and the author's [`Member`] cannot be
     ///   found in [`Guild#structfield.members`].
     #[cfg(feature = "cache")]
@@ -229,10 +230,18 @@ impl Message {
         };
 
         let guild = cache.as_ref().guild(guild_id)?;
-        if let Some(member) = &self.member {
-            Some(guild.partial_member_permissions(self.author.id, member))
+        let channel = if let Some(channel) = guild.channels.get(&self.channel_id) {
+            channel
+        } else if let Some(thread) = guild.threads.iter().find(|th| th.id == self.channel_id) {
+            thread
         } else {
-            Some(guild.member_permissions(guild.members.get(&self.author.id)?))
+            return None;
+        };
+
+        if let Some(member) = &self.member {
+            Some(guild.partial_member_permissions_in(channel, self.author.id, member))
+        } else {
+            Some(guild.user_permissions_in(channel, guild.members.get(&self.author.id)?))
         }
     }
 
@@ -1442,4 +1451,76 @@ pub struct PollAnswerCount {
     pub id: AnswerId,
     pub count: u64,
     pub me_voted: bool,
+}
+
+// all tests here require cache, move if non-cache test is added
+#[cfg(all(test, feature = "cache"))]
+mod tests {
+    use std::collections::HashMap;
+
+    use dashmap::DashMap;
+
+    use super::{
+        Guild,
+        GuildChannel,
+        Member,
+        Message,
+        PermissionOverwrite,
+        PermissionOverwriteType,
+        Permissions,
+        User,
+        UserId,
+    };
+    use crate::cache::wrappers::MaybeMap;
+    use crate::cache::Cache;
+
+    /// Test that author_permissions checks the permissions in a channel, not just the guild.
+    #[test]
+    fn author_permissions_respects_overwrites() {
+        // Author of the message, with a random ID that won't collide with defaults.
+        let author = User {
+            id: UserId::new(50778944701071),
+            ..Default::default()
+        };
+
+        // Channel with the message, with SEND_MESSAGES on.
+        let channel = GuildChannel {
+            permission_overwrites: vec![PermissionOverwrite {
+                allow: Permissions::SEND_MESSAGES,
+                deny: Permissions::default(),
+                kind: PermissionOverwriteType::Member(author.id),
+            }],
+            ..Default::default()
+        };
+        let channel_id = channel.id;
+
+        // Guild with the author and channel cached, default (empty) permissions.
+        let guild = Guild {
+            channels: HashMap::from([(channel.id, channel)]),
+            members: HashMap::from([(author.id, Member {
+                user: author.clone(),
+                ..Default::default()
+            })]),
+            ..Default::default()
+        };
+
+        // Message, tied to the guild and the channel.
+        let message = Message {
+            author,
+            channel_id,
+            guild_id: Some(guild.id),
+            ..Default::default()
+        };
+
+        // Cache, with the guild setup.
+        let mut cache = Cache::new();
+        cache.guilds = MaybeMap(Some({
+            let guilds = DashMap::default();
+            guilds.insert(guild.id, guild);
+            guilds
+        }));
+
+        // The author should only have the one permission, SEND_MESSAGES.
+        assert_eq!(message.author_permissions(&cache), Some(Permissions::SEND_MESSAGES));
+    }
 }

@@ -428,6 +428,8 @@ impl Guild {
         required_permissions: Permissions,
     ) -> Result<(), Error> {
         if let Some(member) = self.members.get(&cache.current_user().id) {
+            // This isn't used for any channel-specific permissions, but sucks still.
+            #[allow(deprecated)]
             let bot_permissions = self.member_permissions(member);
             if !bot_permissions.contains(required_permissions) {
                 return Err(Error::Model(ModelError::InvalidPermissions {
@@ -1908,6 +1910,7 @@ impl Guild {
     /// Calculate a [`Member`]'s permissions in the guild.
     #[inline]
     #[must_use]
+    #[deprecated = "Use Guild::member_permissions_in, as this doesn't consider permission overwrites"]
     pub fn member_permissions(&self, member: &Member) -> Permissions {
         Self::user_permissions_in_(
             None,
@@ -1926,6 +1929,7 @@ impl Guild {
     /// Panics if the passed [`UserId`] does not match the [`PartialMember`] id, if user is Some.
     #[inline]
     #[must_use]
+    #[deprecated = "Use Guild::partial_member_permissions_in, as this doesn't consider permission overwrites"]
     pub fn partial_member_permissions(
         &self,
         member_id: UserId,
