@@ -4,6 +4,8 @@
 
 ![serenity logo][logo]
 
+# DO NOT SYNC UPSTREAM
+
 Serenity is a Rust library for the Discord API.
 
 View the [examples] on how to use serenity's API. To make a bot with slash commands or text
