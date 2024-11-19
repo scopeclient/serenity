@@ -289,8 +289,10 @@ impl Shard {
                 self.session_id = Some(ready.ready.session_id.clone());
                 self.stage = ConnectionStage::Connected;
 
-                if let Some(callback) = self.application_id_callback.take() {
-                    callback(ready.ready.application.id);
+                if let Some(application_id) = &ready.ready.application {
+                    if let Some(callback) = self.application_id_callback.take() {
+                        callback(application_id.id);
+                    }
                 }
             },
             Event::Resumed(_) => {
