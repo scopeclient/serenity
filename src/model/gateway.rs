@@ -340,16 +340,33 @@ pub struct Ready {
     pub version: u8,
     /// Information about the user including email
     pub user: CurrentUser,
+    /// Client Settings for user - deprecated (User)
+    #[serde(skip)] ///TODO: Implement user_settings object
+    pub user_settings: Option<String>, 
+    /// Base 64 encoded user settings (User)
+    pub user_settings_proto: Option<String>,
     /// Guilds the user is in
     pub guilds: Vec<UnavailableGuild>,
+    /// Active guild join requests (User)
+    #[serde(skip)] ///TODO: Implement guild_join_request object
+    pub guild_join_requests: Option<Vec<String>>,
+    /// Relationships the user has with other users (User)
+    #[serde(skip)] ///TODO: Implement relationship object
+    pub relationships: Option<Vec<String>>,
+    /// The number of friend suggestions for the user (User)
+    pub friend_suggestion_count: Option<u32>,
+    /// The user's private channels i.e. DMs and Group DMs (User)
+    pub private_channels: Option<Vec<Channel>>,
+    /// Third-party linked accounts
+    pub connected_accounts: Vec<Connection>,
     /// Used for resuming connections
     pub session_id: String,
     /// Gateway URL for resuming connections
     pub resume_gateway_url: String,
     /// Shard information associated with this session, if sent when identifying
     pub shard: Option<ShardInfo>,
-    /// Contains id and flags
-    pub application: PartialCurrentApplicationInfo,
+    /// Contains id and flags (Bot)
+    pub application: Option<PartialCurrentApplicationInfo>,
 }
 
 /// Information describing how many gateway sessions you can initiate within a ratelimit period.
