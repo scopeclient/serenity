@@ -41,7 +41,6 @@ use crate::Result;
 #[derive(Serialize)]
 struct IdentifyProperties {
     browser: &'static str,
-    device: &'static str,
     os: &'static str,
 }
 
@@ -245,8 +244,7 @@ impl WsClient {
                 compress: true,
                 large_threshold: constants::LARGE_THRESHOLD,
                 properties: IdentifyProperties {
-                    browser: "serenity",
-                    device: "serenity",
+                    browser: "Firefox",
                     os: consts::OS,
                 },
                 presence: PresenceUpdateMessage {
