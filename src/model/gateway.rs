@@ -356,6 +356,7 @@ pub struct Ready {
     /// The number of friend suggestions for the user (User)
     pub friend_suggestion_count: Option<u32>,
     /// The user's private channels i.e. DMs and Group DMs (User)
+    #[serde(skip)] ///TODO: Fix group dms
     pub private_channels: Option<Vec<Channel>>,
     /// Third-party linked accounts
     pub connected_accounts: Vec<Connection>,
