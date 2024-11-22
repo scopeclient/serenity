@@ -329,6 +329,7 @@ pub struct Presence {
 }
 
 /// An initial set of information given after IDENTIFYing to the gateway.
+/// This does not support the ready event for bots.
 ///
 /// [Discord docs](https://discord.com/developers/docs/topics/gateway#ready-ready-event-fields).
 #[cfg_attr(feature = "typesize", derive(typesize::derive::TypeSize))]
@@ -340,34 +341,71 @@ pub struct Ready {
     pub version: u8,
     /// Information about the user including email
     pub user: CurrentUser,
-    /// Client Settings for user - deprecated (User)
+    /// Client Settings for user - deprecated
+    /// 
+    /// Omitted when using the USER_SETTINGS_PROTO gateway capability
     #[serde(skip)] ///TODO: Implement user_settings object
     pub user_settings: Option<String>, 
-    /// Base 64 encoded user settings (User)
+    /// Base 64 encoded user settings
+    /// TODO: Implement UserSettingProto stuct and desirialization methods.
     pub user_settings_proto: Option<String>,
     /// Guilds the user is in
-    pub guilds: Vec<UnavailableGuild>,
-    /// Active guild join requests (User)
+    /// TODO: Implement guild chaching for ReadyEvent
+    pub guilds: Vec<Guild>,
+    /// Active guild join requests
     #[serde(skip)] ///TODO: Implement guild_join_request object
-    pub guild_join_requests: Option<Vec<String>>,
-    /// Relationships the user has with other users (User)
+    pub guild_join_requests: Vec<String>,
+    /// Relationships the user has with other users
     #[serde(skip)] ///TODO: Implement relationship object
     pub relationships: Option<Vec<String>>,
-    /// The number of friend suggestions for the user (User)
+    /// The number of friend suggestions for the user
     pub friend_suggestion_count: Option<u32>,
     /// The user's private channels i.e. DMs and Group DMs (User)
-    #[serde(skip)] ///TODO: Fix group dms
-    pub private_channels: Option<Vec<Channel>>,
+    pub private_channels: Vec<Channel>,
     /// Third-party linked accounts
     pub connected_accounts: Vec<Connection>,
+    /// Map of user IDs to to their notes
+    pub notes: HashMap<UserId, String>,
+    /// Presences of friends and implicit relationships
+    pub presences: Vec<Presence>,
+    /// Presences of friends and implicit relationships and any guild presences
+    /// 
+    /// This only exists when the DEDUPE_USER_OBJECTS gateway capability is enabled
+    #[serde(skip)] ///TODO: Implement merged_presences object
+    pub merged_presences: Option<Vec<String>>,
+    /// The Deduped users accross the entire event
+    /// 
+    /// This only exists when the DEDUPE_USER_OBJECTS gateway capability is enabled
+    pub users: Option<Vec<User>>,
+    /// The application of the user if it is a bot
+    pub application: Option<PartialCurrentApplicationInfo>,
     /// Used for resuming connections
     pub session_id: String,
+    /// The session type
+    pub session_type: String,
+    /// Hash of the auth session ID of the auth token used to connect
+    pub auth_session_id_hash: String,
+    /// Refreshed auth token for this user; The client should replentish the auth token with this if it exists
+    pub auth_token: Option<String>,
+    /// Token used for analytics tracking requests
+    pub analytics_token: String,
+    /// Types of 2FA the user has enabled
+    /// TODO: Create enum for 2FA types
+    pub authenticator_types: Option<Vec<u8>>,
+    /// Action required for the user to take before continuing to use discord
+    /// TODO: Create enum for required actions
+    pub required_action: Option<String>,
+    /// Detected ISO 3166-1 alpha-2 country code of the user
+    pub country_code: String,
+    /// Geo-ordered rtc regions for setting the user's RTC server region for voice channels
+    pub geo_ordered_rtc_regions: Vec<String>,
+    /// Tutorial state for the user
+    #[serde(skip)] /// TODO: Create tutorial object
+    pub tutorial: Option<String>,
+    /// Shard information if sharded
+    pub shard: Option<ShardInfo>,
     /// Gateway URL for resuming connections
     pub resume_gateway_url: String,
-    /// Shard information associated with this session, if sent when identifying
-    pub shard: Option<ShardInfo>,
-    /// Contains id and flags (Bot)
-    pub application: Option<PartialCurrentApplicationInfo>,
 }
 
 /// Information describing how many gateway sessions you can initiate within a ratelimit period.
