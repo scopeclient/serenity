@@ -463,7 +463,7 @@ pub(crate) fn user_has_perms_cache(
 pub(crate) fn user_perms(cache: impl AsRef<Cache>, channel_id: ChannelId) -> Result<Permissions> {
     let cache = cache.as_ref();
 
-    let Some(guild_id) = cache.channels.get(&channel_id).map(|c| *c) else {
+    let Some(guild_id) = cache.guild_channels.get(&channel_id).map(|c| *c) else {
         return Err(Error::Model(ModelError::ChannelNotFound));
     };
 

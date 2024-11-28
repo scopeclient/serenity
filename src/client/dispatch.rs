@@ -10,7 +10,7 @@ use crate::cache::{Cache, CacheUpdate};
 #[cfg(feature = "framework")]
 use crate::framework::Framework;
 use crate::internal::tokio::spawn_named;
-use crate::model::channel::ChannelType;
+use crate::model::channel::{ChannelType, Channel};
 use crate::model::event::Event;
 use crate::model::guild::Member;
 #[cfg(feature = "cache")]
@@ -117,26 +117,28 @@ fn update_cache_with_event(
             update_cache!(cache, event);
 
             let channel = event.channel;
-            if channel.kind == ChannelType::Category {
-                FullEvent::CategoryCreate {
-                    category: channel,
+            match channel {
+                Channel::Guild(guild_channel) if guild_channel.kind == ChannelType::Category => {
+                    FullEvent::CategoryCreate {
+                        category: guild_channel,
+                    }
                 }
-            } else {
-                FullEvent::ChannelCreate {
+                _ => FullEvent::ChannelCreate {
                     channel,
                 }
             }
         },
         Event::ChannelDelete(mut event) => {
             let cached_messages = if_cache!(event.update(cache));
-
             let channel = event.channel;
-            if channel.kind == ChannelType::Category {
-                FullEvent::CategoryDelete {
-                    category: channel,
+
+            match channel {
+                Channel::Guild(guild_channel) if guild_channel.kind == ChannelType::Category => {
+                    FullEvent::CategoryDelete {
+                        category: guild_channel,
+                    }
                 }
-            } else {
-                FullEvent::ChannelDelete {
+                _ => FullEvent::ChannelDelete {
                     channel,
                     messages: cached_messages,
                 }

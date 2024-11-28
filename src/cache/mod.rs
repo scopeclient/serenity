@@ -121,6 +121,7 @@ pub type GuildChannelRef<'a> = MappedGuildRef<'a, GuildChannel>;
 pub type CurrentUserRef<'a> = CacheRef<'a, Never, CurrentUser, Never>;
 pub type GuildRolesRef<'a> = MappedGuildRef<'a, HashMap<RoleId, Role>>;
 pub type GuildChannelsRef<'a> = MappedGuildRef<'a, HashMap<ChannelId, GuildChannel>>;
+pub type PrivateChannelRef<'a> = CacheRef<'a, ChannelId, PrivateChannel, Never>;
 pub type MessageRef<'a> = CacheRef<'a, ChannelId, Message, HashMap<MessageId, Message>>;
 pub type ChannelMessagesRef<'a> = CacheRef<'a, ChannelId, HashMap<MessageId, Message>, Never>;
 
@@ -179,7 +180,9 @@ pub struct Cache {
 
     // Channels cache:
     /// A map of channel ids to the guilds in which the channel data is stored.
-    pub(crate) channels: MaybeMap<ChannelId, GuildId>,
+    pub(crate) guild_channels: MaybeMap<ChannelId, GuildId>,
+    /// A map of private channels with full data available.
+    pub(crate) private_channels: MaybeMap<ChannelId, PrivateChannel>,
 
     // Guilds cache:
     // ---
@@ -275,7 +278,8 @@ impl Cache {
             #[cfg(feature = "temp_cache")]
             temp_users: temp_cache(settings.time_to_live),
 
-            channels: MaybeMap(settings.cache_channels.then(DashMap::default)),
+            guild_channels: MaybeMap(settings.cache_channels.then(DashMap::default)),
+            private_channels: MaybeMap(settings.cache_channels.then(DashMap::default)),
 
             guilds: MaybeMap(settings.cache_guilds.then(DashMap::default)),
             unavailable_guilds: MaybeMap(settings.cache_guilds.then(DashMap::default)),
@@ -379,7 +383,7 @@ impl Cache {
     }
 
     fn channel_(&self, id: ChannelId) -> Option<GuildChannelRef<'_>> {
-        let guild_id = *self.channels.get(&id)?;
+        let guild_id = *self.guild_channels.get(&id)?;
         let guild_ref = self.guilds.get(&guild_id)?;
         let channel = guild_ref.try_map(|g| g.channels.get(&id)).ok();
         if let Some(channel) = channel {
@@ -532,9 +536,31 @@ impl Cache {
         Some(CacheRef::from_mapped_ref(channels))
     }
 
+    /// Returns a list of ids for the cached private channels.
+    pub fn private_channels(&self) -> Vec<ChannelId> {
+        self.private_channels.iter().map(|i| *i.key()).collect()
+    }
+    /// Returns the channel for the given `channel_id`.
+    #[inline]
+    pub fn private_channel<C: Into<ChannelId>>(&self, channel_id: C) -> Option<PrivateChannelRef<'_>> {
+        self.private_channel_(channel_id.into())
+    }
+
+    fn private_channel_(&self, channel_id: ChannelId) -> Option<PrivateChannelRef<'_>> {
+        self.private_channels.get(&channel_id).map(CacheRef::from_ref)
+    }
+
+    /// Returns the number of channels in the cache.
+    pub fn channel_count(&self) -> usize {
+        self.guild_channels.len() + self.private_channels.len()
+    }
     /// Returns the number of guild channels in the cache.
     pub fn guild_channel_count(&self) -> usize {
-        self.channels.len()
+        self.guild_channels.len()
+    }
+    /// Returns the number of private channels in the cache.
+    pub fn private_channel_count(&self) -> usize {
+        self.private_channels.len()
     }
 
     /// Returns the number of shards.
@@ -828,10 +854,10 @@ mod test {
         // Add a channel delete event to the cache, the cached messages for that channel should now
         // be gone.
         let mut delete = ChannelDeleteEvent {
-            channel: channel.clone(),
+            channel: Channel::Guild(channel.clone()),
         };
         assert!(cache.update(&mut delete).is_some());
-        assert!(!cache.messages.contains_key(&delete.channel.id));
+        assert!(!cache.messages.contains_key(&delete.channel.id()));
 
         // Test deletion of a guild channel's message cache when a GuildDeleteEvent is received.
         let mut guild_create = GuildCreateEvent {

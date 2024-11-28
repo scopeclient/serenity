@@ -33,7 +33,8 @@ pub struct PrivateChannel {
     pub last_pin_timestamp: Option<Timestamp>,
     /// The recipient to the private channel.
     /// 
-    /// This will always be a single user in the case of [`ChannelType::Private`]. Can be empty in the case of [`ChannelType::GroupDM`] if it is a group with just the current user
+    /// This will always be a single user in the case of [`ChannelType::Private`]. Can be empty in the case of [`ChannelType::GroupDM`] if it is a group with just the current user.
+    #[serde(default)]
     pub recipients: Vec<User>,
 }
 

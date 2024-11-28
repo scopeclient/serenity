@@ -122,7 +122,7 @@ event_handler! {
     /// Dispatched when a channel is created.
     ///
     /// Provides said channel's data.
-    ChannelCreate { channel: GuildChannel } => async fn channel_create(&self, ctx: Context);
+    ChannelCreate { channel: Channel } => async fn channel_create(&self, ctx: Context);
 
     /// Dispatched when a category is created.
     ///
@@ -137,7 +137,7 @@ event_handler! {
     /// Dispatched when a channel is deleted.
     ///
     /// Provides said channel's data.
-    ChannelDelete { channel: GuildChannel, messages: Option<Vec<Message>> } => async fn channel_delete(&self, ctx: Context);
+    ChannelDelete { channel: Channel, messages: Option<Vec<Message>> } => async fn channel_delete(&self, ctx: Context);
 
     /// Dispatched when a pin is added, deleted.
     ///
@@ -147,7 +147,7 @@ event_handler! {
     /// Dispatched when a channel is updated.
     ///
     /// The old channel data is only provided when the cache feature is enabled.
-    ChannelUpdate { old: Option<GuildChannel>, new: GuildChannel } => async fn channel_update(&self, ctx: Context);
+    ChannelUpdate { old: Option<Channel>, new: Channel } => async fn channel_update(&self, ctx: Context);
 
     /// Dispatched when a new audit log entry is created.
     ///

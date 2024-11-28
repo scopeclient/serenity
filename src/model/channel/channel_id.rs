@@ -402,7 +402,26 @@ impl ChannelId {
             }
         }
 
+        #[cfg(feature = "cache")]
+        {
+            if let Some(cache) = cache_http.cache() {
+                if let Some(channel) = cache.private_channel(self) {
+                    return Ok(Channel::Private(PrivateChannel::clone(&*channel)));
+                }
+            }
+        }
+
         let channel = cache_http.http().get_channel(self).await?;
+
+        // We are doing this here because discord does not send an event for the creation of a private channel
+        #[cfg(feature = "cache")]
+        {
+            if let Some(cache) = cache_http.cache() {
+                if let Channel::Private(private_channel) =  &channel {
+                    cache.private_channels.insert(private_channel.id, private_channel.clone());
+                }
+            }
+        }
 
         #[cfg(all(feature = "cache", feature = "temp_cache"))]
         {

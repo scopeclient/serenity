@@ -89,7 +89,7 @@ pub struct AutoModActionExecutionEvent {
 #[non_exhaustive]
 pub struct ChannelCreateEvent {
     /// The channel that was created.
-    pub channel: GuildChannel,
+    pub channel: Channel,
 }
 
 /// Requires [`GatewayIntents::GUILDS`].
@@ -100,7 +100,7 @@ pub struct ChannelCreateEvent {
 #[serde(transparent)]
 #[non_exhaustive]
 pub struct ChannelDeleteEvent {
-    pub channel: GuildChannel,
+    pub channel: Channel,
 }
 
 /// Requires [`GatewayIntents::GUILDS`] or [`GatewayIntents::DIRECT_MESSAGES`].
@@ -123,7 +123,7 @@ pub struct ChannelPinsUpdateEvent {
 #[serde(transparent)]
 #[non_exhaustive]
 pub struct ChannelUpdateEvent {
-    pub channel: GuildChannel,
+    pub channel: Channel,
 }
 
 /// Requires [`GatewayIntents::GUILD_MODERATION`] and [`Permissions::VIEW_AUDIT_LOG`].

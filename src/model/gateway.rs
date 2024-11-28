@@ -360,8 +360,8 @@ pub struct Ready {
     pub relationships: Option<Vec<String>>,
     /// The number of friend suggestions for the user
     pub friend_suggestion_count: Option<u32>,
-    /// The user's private channels i.e. DMs and Group DMs (User)
-    pub private_channels: Vec<Channel>,
+    /// The user's private channels i.e. DMs and Group DMs
+    pub private_channels: Vec<PrivateChannel>,
     /// Third-party linked accounts
     pub connected_accounts: Vec<Connection>,
     /// Map of user IDs to to their notes
