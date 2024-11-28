@@ -531,11 +531,11 @@ impl ChannelId {
     /// # Errors
     ///
     /// Same as [`Self::to_channel()`].
-    pub async fn name(self, cache_http: impl CacheHttp) -> Result<String> {
+    pub async fn name(self, cache_http: impl CacheHttp) -> Result<ChannelName> {
         let channel = self.to_channel(cache_http).await?;
 
         Ok(match channel {
-            Channel::Guild(channel) => channel.name,
+            Channel::Guild(channel) => ChannelName::Named(channel.name),
             Channel::Private(channel) => channel.name(),
         })
     }

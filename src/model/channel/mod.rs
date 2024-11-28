@@ -47,6 +47,13 @@ pub enum Channel {
 }
 
 #[cfg(feature = "model")]
+pub enum ChannelName {
+    Named(String),
+    UnnamedGroup(Vec<UserId>),
+    DirectMessage(UserId),
+}
+
+#[cfg(feature = "model")]
 impl Channel {
     /// Converts from [`Channel`] to `Option<GuildChannel>`.
     ///
@@ -193,27 +200,13 @@ impl<'de> Deserialize<'de> for Channel {
         let value = Value::from(map);
         match kind {
             0 | 2 | 4 | 5 | 10 | 11 | 12 | 13 | 14 | 15 => from_value(value).map(Channel::Guild),
-            1 => from_value(value).map(Channel::Private),
+            1 | 3 => from_value(value).map(Channel::Private),
             _ => return Err(DeError::custom("Unknown channel type")),
         }
         .map_err(DeError::custom)
     }
 }
 
-impl fmt::Display for Channel {
-    /// Formats the channel into a "mentioned" string.
-    ///
-    /// This will return a different format for each type of channel:
-    /// - [`PrivateChannel`]s: the recipient's name;
-    /// - [`GuildChannel`]s: a string mentioning the channel that users who can see the channel can
-    ///   click on.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Guild(ch) => fmt::Display::fmt(&ch.id.mention(), f),
-            Self::Private(ch) => fmt::Display::fmt(&ch.recipient.name, f),
-        }
-    }
-}
 
 enum_number! {
     /// A representation of a type of channel.

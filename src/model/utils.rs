@@ -300,35 +300,6 @@ pub mod comma_separated_string {
     }
 }
 
-/// Used with `#[serde(with = "single_recipient")]`
-pub mod single_recipient {
-    use serde::de::Error;
-    use serde::ser::SerializeSeq;
-    use serde::{Deserialize, Deserializer, Serializer};
-
-    use crate::model::user::User;
-
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<User, D::Error> {
-        let mut users: Vec<User> = Vec::deserialize(deserializer)?;
-
-        let user = if users.is_empty() {
-            return Err(Error::custom("Expected a single recipient"));
-        } else {
-            users.remove(0)
-        };
-
-        Ok(user)
-    }
-
-    pub fn serialize<S: Serializer>(user: &User, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut seq = serializer.serialize_seq(Some(1))?;
-
-        seq.serialize_element(user)?;
-
-        seq.end()
-    }
-}
-
 pub mod secret {
     use secrecy::{ExposeSecret, Secret, Zeroize};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};

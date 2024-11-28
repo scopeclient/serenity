@@ -1,4 +1,3 @@
-use std::fmt;
 #[cfg(feature = "model")]
 use std::sync::Arc;
 
@@ -9,7 +8,6 @@ use crate::http::CacheHttp;
 #[cfg(feature = "model")]
 use crate::http::{Http, Typing};
 use crate::model::prelude::*;
-use crate::model::utils::single_recipient;
 
 /// A Direct Message text channel with another user.
 ///
@@ -22,18 +20,21 @@ pub struct PrivateChannel {
     ///
     /// Can be used to calculate the first message's creation date.
     pub id: ChannelId,
+    /// Channel type
+    /// 
+    /// This should always be [`ChannelType::Private`] or [`ChannelType::GroupDM`]
+    #[serde(rename = "type")]
+    pub kind: ChannelType,
+    /// The channel name
+    pub name: Option<String>,
     /// The Id of the last message sent.
     pub last_message_id: Option<MessageId>,
     /// Timestamp of the last time a [`Message`] was pinned.
     pub last_pin_timestamp: Option<Timestamp>,
-    /// Indicator of the type of channel this is.
-    ///
-    /// This should always be [`ChannelType::Private`].
-    #[serde(rename = "type")]
-    pub kind: ChannelType,
     /// The recipient to the private channel.
-    #[serde(with = "single_recipient", rename = "recipients")]
-    pub recipient: User,
+    /// 
+    /// This will always be a single user in the case of [`ChannelType::Private`]. Can be empty in the case of [`ChannelType::GroupDM`] if it is a group with just the current user
+    pub recipients: Vec<User>,
 }
 
 #[cfg(feature = "model")]
@@ -197,10 +198,23 @@ impl PrivateChannel {
         self.id.messages(cache_http, builder).await
     }
 
-    /// Returns "DM with $username#discriminator".
+    /// Returns the name of the private channel or if none exists returns the Id/Ids of the recipients 
+    /// 
+    /// **Note**: The CurrentUser may or may not be in the list of recipients
     #[must_use]
-    pub fn name(&self) -> String {
-        format!("DM with {}", self.recipient.tag())
+    pub fn name(&self) -> ChannelName {
+        if self.kind == ChannelType::Private {
+            ChannelName::DirectMessage(self.recipients[0].id.clone())
+        } else {
+            match self.name.clone() {
+                Some(name) => ChannelName::Named(name),
+                None => ChannelName::UnnamedGroup(self.recipient_ids()),
+            }
+        }
+    }
+
+    fn recipient_ids(&self) -> Vec<UserId> {
+        self.recipients.iter().map(|u| u.id.clone()).collect::<Vec<_>>()
     }
 
     /// Gets the list of [`User`]s who have reacted to a [`Message`] with a certain [`Emoji`].
@@ -364,12 +378,5 @@ impl PrivateChannel {
         message_id: impl Into<MessageId>,
     ) -> Result<()> {
         self.id.unpin(http, message_id).await
-    }
-}
-
-impl fmt::Display for PrivateChannel {
-    /// Formats the private channel, displaying the recipient's username.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.recipient.name)
     }
 }
